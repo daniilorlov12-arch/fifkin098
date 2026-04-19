@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>ФинГрам · Финансовая грамотность</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0F172A;
+            color: #F1F5F9;
+            min-height: 100vh;
+            padding-bottom: 20px;
+        }
+        .header {
+            background: #0B1320;
+            padding: 15px 20px;
+            border-bottom: 1px solid #334155;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .school-name { font-size: 1.5rem; font-weight: bold; color: #FBBF24; }
+        .school-slogan { color: #94A3B8; font-size: 0.8rem; }
+        .nav-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 6px;
+            margin-top: 10px;
+            padding-bottom: 5px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .nav-scroll::-webkit-scrollbar { display: none; }
+        .nav-link {
+            padding: 12px 16px;
+            color: #94A3B8;
+            text-decoration: none;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            background: #1E293B;
+            touch-action: manipulation;
+        }
+        .nav-link.active { background: #FBBF24; color: #0F172A; }
+        .container { padding: 15px; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .btn {
+            padding: 16px 20px;
+            background: #FBBF24;
+            color: #0F172A;
+            border: none;
+            border-radius: 60px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.1rem;
+            width: 100%;
+            margin: 8px 0;
+            touch-action: manipulation;
+        }
+        .btn-small {
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            width: auto;
+            display: inline-block;
+        }
+        .btn-secondary {
+            background: transparent;
+            color: #F1F5F9;
+            border: 2px solid #334155;
+        }
+        .btn:disabled { opacity: 0.6; background: #64748B; }
+        .card {
+            background: #1E293B;
+            padding: 18px;
+            border-radius: 24px;
+            border: 1px solid #334155;
+            margin-bottom: 15px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 15px 0;
+        }
+        .stat-value { font-size: 1.8rem; font-weight: bold; color: #FBBF24; }
+        .progress-bar { height: 14px; background: #0F172A; border-radius: 20px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #10B981; }
+        .level-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: #FBBF24;
+            color: #0F172A;
+            border-radius: 40px;
+            font-weight: bold;
+        }
+        .quiz-option {
+            padding: 18px;
+            background: #0F172A;
+            border: 2px solid #334155;
+            border-radius: 20px;
+            margin: 10px 0;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        .quiz-option.correct { background: #10B981; border-color: #10B981; }
+        .quiz-option.wrong { background: #EF4444; border-color: #EF4444; }
+        .quiz-option.disabled { pointer-events: none; opacity: 0.7; }
+        .empire-item {
+            background: #0F172A;
+            padding: 15px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+            text-align: center;
+        }
+        .empire-item.owned { border-color: #FBBF24; background: #1E293B; }
+        .empire-icon { font-size: 2.5rem; }
+        .income-badge { color: #10B981; font-weight: bold; }
+        select, input {
+            padding: 16px;
+            background: #0F172A;
+            color: white;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            font-size: 1rem;
+            width: 100%;
+            margin: 8px 0;
+        }
+        canvas { max-width: 100%; height: auto; }
+        .balance-badge {
+            background: #FBBF24;
+            color: #0F172A;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .chest-card {
+            background: #0F172A;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid #334155;
+            cursor: pointer;
+        }
+        .chest-card:hover { border-color: #FBBF24; }
+        .chest-icon { font-size: 3rem; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="school-name">ОДИНДЕВЯТЬ</div>
+        <div class="school-slogan">Образование со смыслом</div>
+        <div style="margin-top: 10px; display: flex; gap: 8px;">
+            <span class="balance-badge">🪙 <span id="mobileBalance">10000</span></span>
+            <span class="balance-badge">💎 <span id="mobileCrystals">250</span></span>
+            <span class="balance-badge">📈 <span id="mobileLevel">Ур. 1</span></span>
+        </div>
+        <div class="nav-scroll" id="navScroll">
+            <a class="nav-link active" data-page="home">🏠</a>
+            <a class="nav-link" data-page="learn">📚</a>
+            <a class="nav-link" data-page="books">📖</a>
+            <a class="nav-link" data-page="exchange">📊</a>
+            <a class="nav-link" data-page="quiz">🎮</a>
+            <a class="nav-link" data-page="empire">🏢</a>
+            <a class="nav-link" data-page="market">🏪</a>
+            <a class="nav-link" data-page="profile">👤</a>
+        </div>
+    </header>
+
+    <div class="container" id="appContainer"></div>
+
+    <script>
+        // ==================== ГЛОБАЛЬНЫЕ ДАННЫЕ ====================
+        let balance = 10000, capital = 15000, questionsToday = 0, day = 1;
+        let level = 1, xp = 0;
+        let crystals = 250;
+        let currentPage = 'home';
+        
+        // Биржа
+        let assets = {
+            gold: { name: '🥇 Золото', price: 3000, history: [3000, 3100, 3050, 3200, 3150] },
+            silver: { name: '🥈 Серебро', price: 1000, history: [1000, 1050, 980, 1100, 1080] },
+            oil: { name: '🛢️ Нефть', price: 1500, history: [1500, 1550, 1480, 1600, 1580] },
+            gas: { name: '🔥 Газ', price: 800, history: [800, 820, 790, 850, 830] },
+            wheat: { name: '🌾 Пшеница', price: 500, history: [500, 520, 490, 530, 510] },
+            tech: { name: '📱 IT-акции', price: 2500, history: [2500, 2600, 2550, 2700, 2650] }
+        };
+        let portfolio = { gold: 0, silver: 0, oil: 0, gas: 0, wheat: 0, tech: 0 };
+        let selectedAsset = 'gold';
+        
+        // Империя (ОГРОМНАЯ: 15 недвижимости, 15 машин, 20 бизнесов)
+        let empire = { re: [], cars: [], biz: [] };
+        let lastCollect = 0;
+        const reItems = [
+            { icon: '🏢', name: 'Студия', price: 5000, inc: 200 },
+            { icon: '🏢', name: '1-к квартира', price: 8000, inc: 350 },
+            { icon: '🏢', name: '2-к квартира', price: 12000, inc: 500 },
+            { icon: '🏢', name: '3-к квартира', price: 18000, inc: 800 },
+            { icon: '🏠', name: 'Дом', price: 30000, inc: 1500 },
+            { icon: '🏡', name: 'Таунхаус', price: 25000, inc: 1200 },
+            { icon: '🏰', name: 'Особняк', price: 100000, inc: 5000 },
+            { icon: '🏬', name: 'Офис', price: 50000, inc: 2500 },
+            { icon: '🏭', name: 'Склад', price: 20000, inc: 1000 },
+            { icon: '🌆', name: 'Пентхаус', price: 80000, inc: 4000 },
+            { icon: '🏘️', name: 'Коттедж', price: 45000, inc: 2200 },
+            { icon: '🏚️', name: 'Дача', price: 15000, inc: 600 },
+            { icon: '🏛️', name: 'Магазин', price: 35000, inc: 1800 },
+            { icon: '🏪', name: 'Киоск', price: 10000, inc: 400 },
+            { icon: '🏫', name: 'Здание', price: 70000, inc: 3500 }
+        ];
+        const carItems = [
+            { icon: '🚗', name: 'Lada Granta', price: 3000, inc: 100 },
+            { icon: '🚗', name: 'Kia Rio', price: 5000, inc: 200 },
+            { icon: '🚙', name: 'Hyundai Creta', price: 8000, inc: 350 },
+            { icon: '🚙', name: 'Toyota Camry', price: 12000, inc: 500 },
+            { icon: '🚘', name: 'BMW 3', price: 20000, inc: 900 },
+            { icon: '🚘', name: 'Mercedes E', price: 30000, inc: 1400 },
+            { icon: '🏎️', name: 'Porsche 911', price: 60000, inc: 3000 },
+            { icon: '🏎️', name: 'Lamborghini', price: 150000, inc: 8000 },
+            { icon: '🚐', name: 'Микроавтобус', price: 15000, inc: 600 },
+            { icon: '🚚', name: 'Грузовик', price: 25000, inc: 1200 },
+            { icon: '🚛', name: 'Тягач', price: 40000, inc: 2000 },
+            { icon: '🚌', name: 'Автобус', price: 35000, inc: 1800 },
+            { icon: '🛵', name: 'Мопед', price: 2000, inc: 80 },
+            { icon: '🏍️', name: 'Мотоцикл', price: 8000, inc: 400 },
+            { icon: '✈️', name: 'Самолёт', price: 200000, inc: 10000 }
+        ];
+        const bizItems = [
+            { icon: '☕', name: 'Кофейня', price: 4000, inc: 150 },
+            { icon: '🍕', name: 'Пиццерия', price: 8000, inc: 350 },
+            { icon: '🍔', name: 'Бургерная', price: 7000, inc: 300 },
+            { icon: '🍣', name: 'Суши-бар', price: 10000, inc: 450 },
+            { icon: '🍜', name: 'Ресторан', price: 20000, inc: 1000 },
+            { icon: '🏪', name: 'Магазин', price: 6000, inc: 250 },
+            { icon: '🛒', name: 'Супермаркет', price: 25000, inc: 1200 },
+            { icon: '💻', name: 'IT-стартап', price: 15000, inc: 800 },
+            { icon: '📱', name: 'Разработка игр', price: 30000, inc: 1500 },
+            { icon: '🏭', name: 'Завод', price: 100000, inc: 5000 },
+            { icon: '⛽', name: 'АЗС', price: 40000, inc: 2000 },
+            { icon: '🏨', name: 'Отель', price: 80000, inc: 4000 },
+            { icon: '💇', name: 'Салон красоты', price: 5000, inc: 200 },
+            { icon: '🏋️', name: 'Фитнес-клуб', price: 15000, inc: 700 },
+            { icon: '📦', name: 'Склад', price: 20000, inc: 900 },
+            { icon: '🚕', name: 'Таксопарк', price: 50000, inc: 2500 },
+            { icon: '📺', name: 'Медиа', price: 35000, inc: 1800 },
+            { icon: '🎮', name: 'Киберспорт', price: 25000, inc: 1200 },
+            { icon: '🏪', name: 'Минимаркет', price: 12000, inc: 500 },
+            { icon: '🍷', name: 'Винный бутик', price: 18000, inc: 800 }
+        ];
+        
+        // Книги (8 штук)
+        const books = [
+            'Самый богатый человек в Вавилоне', 'Богатый папа, бедный папа', 'Психология денег',
+            'Думай и богатей', 'Путь к финансовой свободе', 'Разумный инвестор',
+            'Маленькая книга победителя рынка', 'Инвестиции для чайников'
+        ];
+        
+        // Маркет
+        let inventory = { crystals: 250, coupons: [], keys: [], vipKeys: [] };
+        let marketLots = [];
+        let myLots = [];
+        let crystalToCoinRate = 20;
+        let coinToCrystalRate = 25;
+        let currentMarketTab = 'chests';
+        
+        const marketPrices = {
+            '💎 Кристалл': { min: 15, max: 30 },
+            '🏷️ Купон 5%': { min: 200, max: 400 },
+            '🔑 Ключ': { min: 300, max: 600 },
+            '🔐 VIP-ключ': { min: 1500, max: 3000 }
+        };
+        
+        const chests = [
+            { id: 'noob', name: '📦 Сундук новичка', price: 200, drops: [
+                { item: '💎 Кристалл', min: 1, max: 3, chance: 50 },
+                { item: '💎 Кристалл', min: 3, max: 8, chance: 30 },
+                { item: '🏷️ Купон 5%', min: 1, max: 1, chance: 20 }
+            ]},
+            { id: 'invest', name: '🎁 Сундук инвестора', price: 500, drops: [
+                { item: '💎 Кристалл', min: 3, max: 10, chance: 40 },
+                { item: '💎 Кристалл', min: 10, max: 20, chance: 30 },
+                { item: '🏷️ Купон 10%', min: 1, max: 1, chance: 20 },
+                { item: '🔑 Ключ', min: 1, max: 2, chance: 10 }
+            ]},
+            { id: 'mega', name: '💎 Мега-сундук', price: 1500, drops: [
+                { item: '💎 Кристалл', min: 10, max: 30, chance: 40 },
+                { item: '💎 Кристалл', min: 30, max: 50, chance: 30 },
+                { item: '🏷️ Купон 25%', min: 1, max: 1, chance: 20 },
+                { item: '🔐 VIP-ключ', min: 1, max: 2, chance: 10 }
+            ]}
+        ];
+        
+    // Викторина (УПРОЩЁННАЯ: 7-9 классы, 5 предметов, без сложности)
+        const questionsDB = {
+            math: {
+                7: [{ q: '3(x-4)=2x+6. x?', o: ['12','18','24','30'], c: 1 }],
+                8: [{ q: '2x²-8=0', o: ['±2','±4','±8','0'], c: 0 }],
+                9: [{ q: 'sin 30°?', o: ['0','0.5','1','√3/2'], c: 1 }]
+            },
+            russian: {
+                7: [{ q: 'Какое слово пишется слитно?', o: ['(не)знал','(не)был','(не)навидеть','(не)думал'], c: 2 }],
+                8: [{ q: 'Причастие?', o: ['Читая','Читающий','Читать','Чтение'], c: 1 }],
+                9: [{ q: 'Где нужна запятая?', o: ['Я пошел','Когда придешь','Солнце','Дождь'], c: 1 }]
+            },
+            english: {
+                7: [{ q: 'I ___ a student.', o: ['is','am','are','be'], c: 1 }],
+                8: [{ q: 'Passive: They built the house', o: ['is built','was built','built','has built'], c: 1 }],
+                9: [{ q: 'If I ___ rich...', o: ['am','was','were','be'], c: 2 }]
+            },
+            biology: {
+                7: [{ q: 'Сколько камер в сердце?', o: ['2','3','4','5'], c: 2 }],
+                8: [{ q: 'Хромосом у человека?', o: ['23','46','48','44'], c: 1 }],
+                9: [{ q: 'Митохондрия это?', o: ['Органоид','Вирус','Бактерия','Белок'], c: 0 }]
+            },
+            informatics: {
+                7: [{ q: 'CPU это?', o: ['Память','Процессор','Диск','Видео'], c: 1 }],
+                8: [{ q: 'Что такое алгоритм?', o: ['Программа','Действия','Код','Переменная'], c: 1 }],
+                9: [{ q: 'Система счисления в ПК?', o: ['10-я','2-я','8-я','16-я'], c: 1 }]
+            }
+        };
+        let currentQuiz = { qs: [], idx: 0, score: 0, answered: false };
+
+        // ==================== ГЕНЕРАЦИЯ РЫНКА ====================
+        function generateMarket() {
+            const sellers = ['🧑 Investor_42', '👩 Trader_Ann', '🧑 CryptoKing'];
+            const items = [
+                { name: '💎 Кристалл', count: [5, 20], priceBase: 20 },
+                { name: '🏷️ Купон 5%', count: [1, 1], priceBase: 300 },
+                { name: '🔑 Ключ', count: [1, 2], priceBase: 450 }
+            ];
+            marketLots = [];
+            for (let i = 0; i < 6; i++) {
+                const seller = sellers[Math.floor(Math.random() * sellers.length)];
+                const item = items[Math.floor(Math.random() * items.length)];
+                const count = Math.floor(Math.random() * (item.count[1] - item.count[0] + 1)) + item.count[0];
+                const price = Math.floor(item.priceBase * count * (0.9 + Math.random() * 0.3));
+                marketLots.push({ id: i, seller, item: item.name, count, price });
+            }
+        }
+
+        function willBotBuy(itemName, pricePerUnit) {
+            const range = marketPrices[itemName];
+            if (!range) return false;
+            if (pricePerUnit >= range.min && pricePerUnit <= range.max) {
+                const position = (pricePerUnit - range.min) / (range.max - range.min);
+                const chance = Math.max(0.3, 1 - position * 0.7);
+                return Math.random() < chance;
+            }
+            return false;
+        }
+
+        function trySellToBots() {
+            const soldLots = [];
+            myLots = myLots.filter(lot => {
+                const pricePerUnit = lot.price / lot.count;
+                if (willBotBuy(lot.item, pricePerUnit)) {
+                    balance += lot.price;
+                    soldLots.push(lot);
+                    return false;
+                }
+                return true;
+            });
+            if (soldLots.length > 0) {
+                alert(`🎉 Боты купили ${soldLots.length} лотов на ${soldLots.reduce((s,l)=>s+l.price,0)} 🪙!`);
+                updateAllBalances();
+                if (currentPage === 'market') renderMarketContent();
+            }
+        }
+
+        function createLot(itemType, count, price) {
+            const pricePerUnit = price / count;
+            const range = marketPrices[itemType];
+            if (range && (pricePerUnit < range.min || pricePerUnit > range.max)) {
+                alert(`Цена должна быть от ${range.min} до ${range.max} 🪙 за штуку!`);
+                return false;
+            }
+            if (itemType === '💎 Кристалл') {
+                if (inventory.crystals < count) { alert('Недостаточно кристаллов!'); return false; }
+                inventory.crystals -= count;
+            } else if (itemType === '🏷️ Купон 5%') {
+                if (inventory.coupons.filter(c => c === '🏷️ Купон 5%').length < count) { alert('Недостаточно купонов!'); return false; }
+                for (let i=0; i<count; i++) {
+                    const idx = inventory.coupons.indexOf('🏷️ Купон 5%');
+                    if (idx > -1) inventory.coupons.splice(idx, 1);
+                }
+            } else if (itemType === '🔑 Ключ') {
+                if (inventory.keys.length < count) { alert('Недостаточно ключей!'); return false; }
+                for (let i=0; i<count; i++) inventory.keys.pop();
+            }
+            myLots.push({ id: Date.now() + Math.random(), item: itemType, count, price });
+            alert(`Лот выставлен!`);
+            return true;
+        }
+
+        // ==================== РЕНДЕР ====================
+        function render() {
+            const app = document.getElementById('appContainer');
+            let html = '';
+            
+            // Главная
+            html += `<div id="home-page" class="page ${currentPage === 'home' ? 'active' : ''}">
+                <div class="card" style="text-align:center">
+                    <h1>Финансовая грамотность <span style="color:#FBBF24">для школьников</span></h1>
+                    <p style="color:#94A3B8">Управляй деньгами и строй империю!</p>
+                    <button class="btn" data-go="learn">📚 Обучение</button>
+                    <button class="btn btn-secondary" data-go="quiz">🎮 Викторина</button>
+                </div>
+                <div class="grid">
+                    <div class="card"><h3>📚</h3><p>30+ уроков</p></div>
+                    <div class="card"><h3>📊</h3><p>Биржа</p></div>
+                    <div class="card"><h3>🎮</h3><p>5 предметов</p></div>
+                    <div class="card"><h3>🏪</h3><p>Маркет</p></div>
+                </div>
+                <div class="card">
+                    <div style="display:flex; justify-content:space-around">
+                        <div><span class="stat-value">${balance}</span><br>🪙</div>
+                        <div><span class="stat-value">${crystals}</span><br>💎</div>
+                        <div><span class="stat-value">${capital}</span><br>💼</div>
+                    </div>
+                </div>
+            </div>`;    
+            
+            // Обучение (ОГРОМНОЕ - 30+ тем)
+            if (currentPage === 'learn') {
+                html += `<div id="learn-page" class="page active">
+                    <h2 style="color:#FBBF24; margin-bottom:15px">📚 Обучение</h2>
+                    <div class="card"><h3 style="color:#FBBF24">💰 Личные финансы</h3></div>
+                    <div class="card"><h4>📊 Бюджет</h4><p style="line-height:1.7; color:#CBD5E1">Бюджет — это твой финансовый план. Правило 50/30/20: 50% доходов трать на необходимое (еда, жильё, транспорт), 30% — на желания и развлечения, 20% — откладывай и инвестируй. Записывай все расходы в приложение или блокнот. Уже через месяц ты увидишь, куда утекают деньги, и сможешь оптимизировать траты. Например, отказ от ежедневного кофе с собой может сэкономить до 3000 рублей в месяц!</p></div>
+                    <div class="card"><h4>📝 Учёт расходов</h4><p style="line-height:1.7; color:#CBD5E1">Веди учёт ежедневно, без пропусков. Разбей траты на категории: еда, транспорт, связь, развлечения, одежда, подарки. Анализируй расходы раз в неделю — это занимает всего 10 минут. Ты удивишься, сколько денег уходит на мелочи: снеки, подписки, импульсивные покупки. Оптимизируй эти статьи и направь сэкономленное в накопления.</p></div>
+                    <div class="card"><h4>🛡️ Подушка безопасности</h4><p style="line-height:1.7; color:#CBD5E1">Это твой финансовый резерв на случай форс-мажора: потеря работы, болезнь, срочный ремонт. Оптимальный размер — 3-6 месяцев твоих обычных расходов. Храни эти деньги на накопительном счёте или вкладе с возможностью снятия без потери процентов. Не инвестируй подушку в акции — они могут упасть именно тогда, когда деньги срочно понадобятся.</p></div>
+                    <div class="card"><h4>🎯 Финансовые цели</h4><p style="line-height:1.7; color:#CBD5E1">Ставь конкретные, измеримые цели с чёткими сроками. Короткие (1-3 месяца): новые наушники, игра, курс. Средние (3-12 месяцев): телефон, велосипед, мини-путешествие. Длинные (год и больше): ноутбук, первый инвестиционный портфель, крупная поездка. Запиши цель, сумму и срок — это повышает вероятность достижения в 10 раз!</p></div>
+                    <div class="card"><h4>📈 Инфляция</h4><p style="line-height:1.7; color:#CBD5E1">Инфляция — это устойчивый рост цен на товары и услуги. В России она обычно составляет 5-10% в год. Если твои деньги просто лежат дома или на обычной карте, их покупательная способность падает: через год на ту же сумму ты купишь меньше. Чтобы сохранить и приумножить капитал, нужно инвестировать в инструменты с доходностью выше инфляции.</p></div>
+                    <div class="card"><h4>🏦 Вклады</h4><p style="line-height:1.7; color:#CBD5E1">Вклад (депозит) — это деньги, которые ты передаёшь банку на определённый срок под процент. Ставка зависит от ключевой ставки ЦБ РФ. С 14 лет можно открыть вклад с письменного согласия родителей. Вклады до 1,4 млн рублей застрахованы государством (АСВ) — если банк закроется, деньги вернут.</p></div>
+                    <div class="card"><h4>💳 Кредиты</h4><p style="line-height:1.7; color:#CBD5E1">Кредит — это деньги банка, которые ты обязуешься вернуть с процентами. Всегда смотри на полную стоимость кредита (ПСК) в процентах годовых, а не только на ежемесячный платёж. Не бери кредиты на развлечения, отпуск или гаджеты — это путь к долговой яме. Кредит оправдан только на то, что принесёт доход или на жизненно необходимое.</p></div>
+                    <div class="card"><h4>📊 Акции</h4><p style="line-height:1.7; color:#CBD5E1">Акция — это ценная бумага, дающая право на долю в компании. Покупая акцию, ты становишься совладельцем бизнеса. Доход можно получить двумя способами: от роста курсовой стоимости (купил дешевле — продал дороже) и от дивидендов (часть прибыли, которую компания распределяет среди акционеров). Акции — высокорисковый инструмент.</p></div>
+                    <div class="card"><h4>📜 Облигации</h4><p style="line-height:1.7; color:#CBD5E1">Облигация — это долговая расписка. Ты даёшь деньги в долг компании или государству, а они обязуются вернуть сумму с процентами (купонами) в определённый срок. Облигации надёжнее акций, но и доходность ниже. Самые безопасные — государственные облигации (ОФЗ).</p></div>
+                    <div class="card"><h4>🧺 ETF и ПИФы</h4><p style="line-height:1.7; color:#CBD5E1">ETF (Exchange Traded Fund) — это биржевой фонд, который содержит корзину из множества акций или облигаций. Покупая одну акцию ETF, ты инвестируешь сразу в десятки или сотни компаний. Это готовая диверсификация. Для начинающего инвестора ETF на широкий рынок — оптимальный выбор.</p></div>
+                    <div class="card"><h4>🥇 Драгметаллы</h4><p style="line-height:1.7; color:#CBD5E1">Золото, серебро, платина — это защитные активы, в которые инвесторы уходят во время кризисов и нестабильности. Золото не генерирует денежный поток (в отличие от бизнеса), его цена растёт только за счёт спроса. В долгосрочной перспективе золото проигрывает акциям по доходности, но служит хорошей страховкой портфеля.</p></div>
+                    <div class="card"><h4>🏠 Недвижимость</h4><p style="line-height:1.7; color:#CBD5E1">Покупка недвижимости для сдачи в аренду или перепродажи — один из самых понятных способов инвестирования. Доход складывается из арендных платежей и роста стоимости самого объекта. Требует большого стартового капитала, но даёт стабильный пассивный доход. Можно инвестировать через фонды недвижимости (REIT).</p></div>
+                    <div class="card"><h4>📉 Диверсификация</h4><p style="line-height:1.7; color:#CBD5E1">Не клади все яйца в одну корзину. Распределяй свои инвестиции по разным классам активов (акции, облигации, недвижимость, золото), по разным странам и валютам. Диверсификация снижает риск потери всего капитала при падении одного из активов.</p></div>
+                    <div class="card"><h4>⚠️ Риски</h4><p style="line-height:1.7; color:#CBD5E1">Рыночный риск — цена актива может упасть. Кредитный риск — компания или государство может не вернуть долг по облигации. Валютный риск — изменение курса валюты влияет на стоимость зарубежных активов. Всегда оценивай свой риск-профиль перед инвестициями.</p></div>
+                    <div class="card"><h4>🚫 Мошенники</h4><p style="line-height:1.7; color:#CBD5E1">Никогда не сообщай данные своей карты, CVV-код и коды из СМС. Не переходи по подозрительным ссылкам. Если звонят из «службы безопасности банка» и просят что-то сделать — клади трубку и перезванивай по официальному номеру. Слишком высокая доходность — признак мошенничества.</p></div>
+                    <div class="card"><h4>🧾 Налоги</h4><p style="line-height:1.7; color:#CBD5E1">НДФЛ — 13% с большинства доходов. Налоговый вычет позволяет вернуть часть уплаченного налога за лечение, обучение, покупку жилья, а также при инвестировании через ИИС (Индивидуальный Инвестиционный Счёт).</p></div>
+                    <div class="card"><h4>❄️ Сложный процент</h4><p style="line-height:1.7; color:#CBD5E1">Сложный процент — это начисление процентов не только на первоначальную сумму, но и на уже накопленные проценты. Формула: S = P × (1 + r)^n. Пример: 100 000 под 15% годовых через 20 лет превратятся в 1 636 653 рубля. Время — твой главный союзник. Начинай инвестировать как можно раньше!</p></div>
+                    <div class="card"><h4>🏝️ Финансовая независимость</h4><p style="line-height:1.7; color:#CBD5E1">Финансовая независимость — это состояние, когда твой пассивный доход полностью покрывает все твои расходы. Ключевая концепция — правило 4%: ты можешь ежегодно тратить 4% от своего инвестиционного капитала. Твоя «цифра свободы» = годовые расходы × 25. Стремись к ней!</p></div>
+                </div>`;
+            } else {
+                html += `<div id="learn-page" class="page"></div>`;
+            }
+            
+            // Книги
+            html += `<div id="books-page" class="page ${currentPage === 'books' ? 'active' : ''}">
+                <h2 style="color:#FBBF24">📖 Книги</h2>
+                <div class="grid">${books.map(b => `<div class="card"><h3>${b}</h3><button class="btn-small read-btn">✓ Прочитал</button></div>`).join('')}</div>
+            </div>`;
+            
+            // Биржа
+            html += `<div id="exchange-page" class="page ${currentPage === 'exchange' ? 'active' : ''}">
+                <h2 style="color:#FBBF24">📊 Биржа</h2>
+                <div class="card">
+                    <p>🪙 ${balance} | 📅 День ${day}</p>
+                    <select id="assetSelect">${Object.keys(assets).map(k => `<option value="${k}">${assets[k].name}</option>`).join('')}</select>
+                    <canvas id="priceChart" width="300" height="150" style="background:#0F172A; border-radius:10px; margin:10px 0"></canvas>
+                    <div class="grid">
+                        ${Object.entries(assets).map(([k,v]) => `<div class="card"><h4>${v.name}</h4><p>${Math.round(v.price)} 🪙</p><p>У тебя: ${portfolio[k]}</p><button class="btn-small buy-btn" data-k="${k}">Купить</button><button class="btn-small btn-secondary sell-btn" data-k="${k}">Продать</button></div>`).join('')}
+                    </div>
+                    <button class="btn" id="nextDayBtn">📅 Следующий день</button>
+                </div>
+            </div>`;
+            
+            // Викторина (УПРОЩЁННАЯ)
+            html += `<div id="quiz-page" class="page ${currentPage === 'quiz' ? 'active' : ''}">
+                <h2 style="color:#FBBF24">🎮 Викторина</h2>
+                <div class="card">
+                    <select id="qGrade">${[7,8,9].map(g => `<option value="${g}">${g} класс</option>`).join('')}</select>
+                    <select id="qSubject">
+                        <option value="math">Математика</option><option value="russian">Русский</option><option value="english">Английский</option>
+                        <option value="biology">Биология</option><option value="informatics">Информатика</option>
+                    </select>
+                    <p>📊 Сегодня: ${questionsToday}/15</p>
+                    <button class="btn" id="startQuiz" ${questionsToday>=15?'disabled':''}>▶️ Начать (100🪙)</button>
+                </div>
+                ${currentQuiz.qs.length > 0 ? `<div class="card"><h3>${currentQuiz.qs[0]?.q}</h3><div id="qOpts"></div></div>` : ''}
+            </div>`;
+            
+            // Империя (ОГРОМНАЯ)
+            const income = empire.re.reduce((s,i)=>s+i.inc,0) + empire.cars.reduce((s,i)=>s+i.inc,0) + empire.biz.reduce((s,i)=>s+i.inc,0);
+            html += `<div id="empire-page" class="page ${currentPage === 'empire' ? 'active' : ''}">
+                <h2 style="color:#FBBF24">🏢 Империя</h2>
+                <div class="card"><p>💰 ${balance}</p><p>📈 Доход: ${income}/день</p><button class="btn" id="collectBtn">💵 Собрать</button></div>
+                <h3>🏠 Недвижимость (15)</h3><div class="grid">${reItems.map(i => `<div class="empire-item"><div class="empire-icon">${i.icon}</div><h4>${i.name}</h4><p>💰 ${i.price}</p><p class="income-badge">+${i.inc}</p><button class="btn-small buy-re" data-i='${JSON.stringify(i)}'>Купить</button></div>`).join('')}</div>
+                <h3>🚗 Машины (15)</h3><div class="grid">${carItems.map(i => `<div class="empire-item"><div class="empire-icon">${i.icon}</div><h4>${i.name}</h4><p>💰 ${i.price}</p><p class="income-badge">+${i.inc}</p><button class="btn-small buy-car" data-i='${JSON.stringify(i)}'>Купить</button></div>`).join('')}</div>
+                <h3>🏪 Бизнес (20)</h3><div class="grid">${bizItems.map(i => `<div class="empire-item"><div class="empire-icon">${i.icon}</div><h4>${i.name}</h4><p>💰 ${i.price}</p><p class="income-badge">+${i.inc}</p><button class="btn-small buy-biz" data-i='${JSON.stringify(i)}'>Купить</button></div>`).join('')}</div>
+            </div>`;
+            
+            // Маркет (с комиссией 5%)
+            html += `<div id="market-page" class="page ${currentPage === 'market' ? 'active' : ''}">
+                <h2 style="color:#FBBF24; margin-bottom:15px">🏪 Маркет</h2>
+                <div style="display:flex; gap:5px; margin-bottom:15px; flex-wrap:wrap">
+                    <button class="btn-small market-tab active" data-mtab="chests">🎁 Ящики</button>
+                    <button class="btn-small market-tab" data-mtab="market">💎 Торговля</button>
+                    <button class="btn-small market-tab" data-mtab="exchange">💱 Обменник (5% комиссия)</button>
+                    <button class="btn-small market-tab" data-mtab="inventory">📦 Инвентарь</button>
+                    <button class="btn-small market-tab" data-mtab="myLots">📤 Мои лоты</button>
+                </div>
+                <div class="card" style="background:#0F172A; padding:12px; margin-bottom:15px">
+                    <p style="color:#94A3B8; font-size:0.9rem">📊 Рыночные цены: 💎15-30🪙 | 🏷️200-400🪙 | 🔑300-600🪙 | 🔐1500-3000🪙</p>
+                </div>
+                <div id="marketContent"></div>
+            </div>`;
+            
+            // Профиль (ПОКАЗЫВАЕТ ВСЁ)
+            html += `<div id="profile-page" class="page ${currentPage === 'profile' ? 'active' : ''}">
+                <h2 style="color:#FBBF24">👤 Профиль</h2>
+                <div class="card" style="text-align:center">
+                    <div style="font-size:4rem">👤</div>
+                    <h3>Игрок</h3>
+                    <p><span class="level-badge">Уровень ${level}</span></p>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${(xp/5000)*100}%"></div></div>
+                    <p>${xp}/5000 XP</p>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:20px">
+                        <div><span class="stat-value">${balance}</span><br>🪙</div>
+                        <div><span class="stat-value">${crystals}</span><br>💎</div>
+                        <div><span class="stat-value">${capital}</span><br>💼</div>
+                    </div>
+                </div>
+                <div class="card" style="margin-top:15px">
+                    <h3 style="color:#FBBF24; margin-bottom:15px">🏢 Твоя империя</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                        <div class="card" style="background:#0F172A; padding:15px">
+                            <h4>🏠 Недвижимость (${empire.re.length})</h4>
+                            ${empire.re.length > 0 ? `<p>${[...new Set(empire.re.map(i => i.name))].map(n => `${n}: ${empire.re.filter(i => i.name === n).length} шт.`).join('<br>')}</p>` : '<p style="color:#94A3B8">Нет</p>'}
+                        </div>
+                        <div class="card" style="background:#0F172A; padding:15px">
+                            <h4>🚗 Машины (${empire.cars.length})</h4>
+                            ${empire.cars.length > 0 ? `<p>${[...new Set(empire.cars.map(i => i.name))].map(n => `${n}: ${empire.cars.filter(i => i.name === n).length} шт.`).join('<br>')}</p>` : '<p style="color:#94A3B8">Нет</p>'}
+                        </div>
+                        <div class="card" style="background:#0F172A; padding:15px; grid-column:span 2">
+                            <h4>🏪 Бизнесы (${empire.biz.length})</h4>
+                            ${empire.biz.length > 0 ? `<p>${[...new Set(empire.biz.map(i => i.name))].map(n => `${n}: ${empire.biz.filter(i => i.name === n).length} шт.`).join('<br>')}</p>` : '<p style="color:#94A3B8">Нет</p>'}
+                        </div>
+                    </div>
+                    <p style="margin-top:15px"><span class="income-badge">📈 Доход: ${empire.re.reduce((s,i)=>s+i.inc,0) + empire.cars.reduce((s,i)=>s+i.inc,0) + empire.biz.reduce((s,i)=>s+i.inc,0)} 🪙/день</span></p>
+                </div>
+                <div class="card" style="margin-top:15px">
+                    <h3 style="color:#FBBF24; margin-bottom:15px">📦 Инвентарь</h3>
+                    <p>💎 Кристаллы: ${inventory.crystals}</p>
+                    <p>🏷️ Купоны: ${inventory.coupons.length ? inventory.coupons.join(', ') : 'Нет'}</p>
+                    <p>🔑 Ключи: ${inventory.keys.length} шт.</p>
+                    <p>🔐 VIP-ключи: ${inventory.vipKeys.length} шт.</p>
+                    <p>📤 Активных лотов: ${myLots.length}</p>
+                </div>
+            </div>`;
+            
+            app.innerHTML = html;
+            if (currentPage === 'market') renderMarketContent();
+            attachEvents();
+            if (currentPage === 'exchange') drawChart();
+            updateAllBalances();
+        }
+
+        function renderMarketContent() {
+            const container = document.getElementById('marketContent');
+            if (!container) return;
+            
+            if (currentMarketTab === 'chests') {
+                container.innerHTML = `<div class="grid">${chests.map(c => `<div class="chest-card" data-chest='${JSON.stringify(c)}'><div class="chest-icon">${c.name.split(' ')[0]}</div><h4>${c.name}</h4><p>${c.price} 🪙</p><button class="btn-small open-chest">Открыть</button></div>`).join('')}</div>`;
+            } else if (currentMarketTab === 'market') {
+                container.innerHTML = `<button class="btn btn-secondary" id="refreshMarket">🔄 Обновить</button>
+                    <div class="grid">${marketLots.map(l => `<div class="card"><div>${l.seller}</div><div style="font-size:1.3rem">${l.item} x${l.count}</div><div class="income-badge">${l.price} 💎</div><button class="btn-small buy-lot" data-lot='${JSON.stringify(l)}'>Купить</button></div>`).join('')}</div>`;
+            } else if (currentMarketTab === 'exchange') {
+                container.innerHTML = `<div class="card">
+                    <h3>Курс: 1 💎 = ${crystalToCoinRate} 🪙 (куп) / ${coinToCrystalRate} 🪙 (прод)</h3>
+                    <p style="color:#EF4444">Комиссия обмена: 5%</p>
+                    <h4>💎 → 🪙 Продать (комиссия 5%)</h4>
+                    <input type="number" id="sellCrystals" value="1" min="1" max="${inventory.crystals}">
+                    <p>Получите: <span id="sellResult">0</span> 🪙</p>
+                    <button class="btn" id="sellCrystalsBtn">Продать</button>
+                    <h4 style="margin-top:20px">🪙 → 💎 Купить</h4>
+                    <input type="number" id="buyCrystals" value="1" min="1">
+                    <p>Стоимость: <span id="buyResult">0</span> 🪙</p>
+                    <button class="btn" id="buyCrystalsBtn">Купить</button>
+                </div>`;
+                setTimeout(() => {
+                    const sellInput = document.getElementById('sellCrystals');
+                    const buyInput = document.getElementById('buyCrystals');
+                    if (sellInput) sellInput.addEventListener('input', () => {
+                        document.getElementById('sellResult').textContent = Math.floor((parseInt(sellInput.value) || 0) * crystalToCoinRate * 0.95);
+                    });
+                    if (buyInput) buyInput.addEventListener('input', () => {
+                        document.getElementById('buyResult').textContent = (parseInt(buyInput.value) || 0) * coinToCrystalRate;
+                    });
+                    document.getElementById('sellCrystalsBtn')?.addEventListener('click', () => {
+                        const amt = parseInt(document.getElementById('sellCrystals').value) || 0;
+                        if (amt > inventory.crystals) { alert('Недостаточно!'); return; }
+                        inventory.crystals -= amt;
+                        balance += Math.floor(amt * crystalToCoinRate * 0.95);
+                        updateAllBalances(); render();
+                    });
+                    document.getElementById('buyCrystalsBtn')?.addEventListener('click', () => {
+                        const amt = parseInt(document.getElementById('buyCrystals').value) || 0;
+                        const cost = amt * coinToCrystalRate;
+                        if (cost > balance) { alert('Недостаточно!'); return; }
+                        balance -= cost;
+                        inventory.crystals += amt;
+                        updateAllBalances(); render();
+                    });
+                }, 50);
+            } else if (currentMarketTab === 'inventory') {
+                container.innerHTML = `<div class="card"><h3>💎 Кристаллы: ${inventory.crystals}</h3></div>
+                    <div class="card"><h4>🏷️ Купоны</h4><p>${inventory.coupons.length ? inventory.coupons.join(', ') : 'Нет'}</p></div>
+                    <div class="card"><h4>🔑 Ключи</h4><p>${inventory.keys.length ? inventory.keys.length+' шт.' : 'Нет'}</p></div>
+                    <div class="card"><h4>🔐 VIP-ключи</h4><p>${inventory.vipKeys.length ? inventory.vipKeys.length+' шт.' : 'Нет'}</p></div>
+                    <div class="card"><h4>📤 Выставить лот</h4>
+                        <select id="sellItemType"><option value="💎 Кристалл">💎 Кристалл</option><option value="🏷️ Купон 5%">🏷️ Купон 5%</option><option value="🔑 Ключ">🔑 Ключ</option></select>
+                        <input type="number" id="sellItemCount" placeholder="Количество" min="1" value="1">
+                        <input type="number" id="sellItemPrice" placeholder="Общая цена в 🪙">
+                        <button class="btn" id="createLotBtn">Выставить</button>
+                    </div>`;
+                document.getElementById('createLotBtn')?.addEventListener('click', () => {
+                    const type = document.getElementById('sellItemType').value;
+                    const count = parseInt(document.getElementById('sellItemCount').value) || 0;
+                    const price = parseInt(document.getElementById('sellItemPrice').value) || 0;
+                    if (createLot(type, count, price)) { renderMarketContent(); updateAllBalances(); }
+                });
+            } else if (currentMarketTab === 'myLots') {
+                if (myLots.length === 0) container.innerHTML = `<div class="card"><p>У вас нет активных лотов</p></div>`;
+                else container.innerHTML = `<div class="grid">${myLots.map(lot => `<div class="card"><h4>${lot.item} x${lot.count}</h4><p class="income-badge">${lot.price} 🪙</p><button class="btn-small btn-secondary cancel-lot" data-id="${lot.id}">Отменить</button></div>`).join('')}</div>`;
+                document.querySelectorAll('.cancel-lot').forEach(b => b.addEventListener('click', () => {
+                    const id = parseFloat(b.dataset.id);
+                    const lot = myLots.find(l => l.id === id);
+                    if (lot) {
+                        if (lot.item === '💎 Кристалл') inventory.crystals += lot.count;
+                        else if (lot.item === '🏷️ Купон 5%') for (let i=0; i<lot.count; i++) inventory.coupons.push('🏷️ Купон 5%');
+                        else if (lot.item === '🔑 Ключ') for (let i=0; i<lot.count; i++) inventory.keys.push('🔑 Ключ');
+                        myLots = myLots.filter(l => l.id !== id);
+                        updateAllBalances(); renderMarketContent();
+                    }
+                }));
+            }
+            attachMarketEvents();
+        }
+
+        function openChest(chest) {
+            if (balance < chest.price) { alert('Недостаточно!'); return; }
+            balance -= chest.price;
+            const rand = Math.random() * 100;
+            let cum = 0, selected = chest.drops[0];
+            for (const drop of chest.drops) { cum += drop.chance; if (rand < cum) { selected = drop; break; } }
+            const count = Math.floor(Math.random() * (selected.max - selected.min + 1)) + selected.min;
+            if (selected.item.includes('Кристалл')) { inventory.crystals += count; alert(`+${count} 💎`); }
+            else if (selected.item.includes('Купон')) { for (let i=0; i<count; i++) inventory.coupons.push(selected.item); alert(selected.item); }
+            else if (selected.item.includes('VIP')) { inventory.vipKeys.push(selected.item); alert('🔐 VIP-ключ!'); }
+            else { for (let i=0; i<count; i++) inventory.keys.push('🔑 Ключ'); alert(`+${count} 🔑`); }
+            updateAllBalances(); render();
+        }
+
+        function attachMarketEvents() {
+            document.querySelectorAll('.open-chest').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); openChest(JSON.parse(b.closest('.chest-card').dataset.chest)); }));
+            document.querySelectorAll('.chest-card').forEach(c => c.addEventListener('click', () => openChest(JSON.parse(c.dataset.chest))));
+            document.querySelectorAll('.buy-lot').forEach(b => b.addEventListener('click', () => {
+                const lot = JSON.parse(b.dataset.lot);
+                if (crystals < lot.price) { alert('Недостаточно кристаллов!'); return; }
+                crystals -= lot.price;
+                if (lot.item.includes('Кристалл')) inventory.crystals += lot.count;
+                else if (lot.item.includes('Купон')) for (let i=0; i<lot.count; i++) inventory.coupons.push(lot.item);
+                else for (let i=0; i<lot.count; i++) inventory.keys.push('🔑 Ключ');
+                marketLots = marketLots.filter(l => l.id !== lot.id);
+                updateAllBalances(); render();
+            }));
+            document.getElementById('refreshMarket')?.addEventListener('click', () => { generateMarket(); renderMarketContent(); });
+        }
+
+        function drawChart() {
+            const canvas = document.getElementById('priceChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const hist = assets[selectedAsset].history;
+            ctx.clearRect(0, 0, 300, 150);
+            if (hist.length < 2) return;
+            const max = Math.max(...hist), min = Math.min(...hist), range = max - min || 1;
+            ctx.beginPath(); ctx.strokeStyle = '#FBBF24'; ctx.lineWidth = 2;
+            hist.forEach((p, i) => {
+                const x = (i / (hist.length - 1)) * 300;
+                const y = 150 - ((p - min) / range) * 130 - 10;
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+        }
+
+        function updateAllBalances() {
+            document.getElementById('mobileBalance').textContent = balance;
+            document.getElementById('mobileCrystals').textContent = inventory.crystals;
+            document.getElementById('mobileLevel').textContent = `Ур. ${level}`;
+        }
+
+        function attachEvents() {
+            document.querySelectorAll('[data-page]').forEach(el => el.addEventListener('click', () => { currentPage = el.dataset.page; document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active')); el.classList.add('active'); render(); }));
+            document.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', () => { currentPage = el.dataset.go; render(); }));
+            document.querySelectorAll('.market-tab').forEach(t => t.addEventListener('click', () => { document.querySelectorAll('.market-tab').forEach(x => x.classList.remove('active')); t.classList.add('active'); currentMarketTab = t.dataset.mtab; renderMarketContent(); }));
+            
+            document.querySelectorAll('.buy-btn').forEach(b => b.addEventListener('click', () => { const k = b.dataset.k; if (balance >= assets[k].price) { balance -= assets[k].price; portfolio[k]++; render(); } }));
+            document.querySelectorAll('.sell-btn').forEach(b => b.addEventListener('click', () => { const k = b.dataset.k; if (portfolio[k] > 0) { portfolio[k]--; balance += assets[k].price; render(); } }));
+            document.getElementById('nextDayBtn')?.addEventListener('click', () => { day++; Object.keys(assets).forEach(k => { assets[k].price = Math.max(100, assets[k].price * (1 + (Math.random()*20-10)/100)); assets[k].history.push(assets[k].price); }); render(); });
+            document.getElementById('assetSelect')?.addEventListener('change', e => { selectedAsset = e.target.value; drawChart(); });
+            
+            document.getElementById('startQuiz')?.addEventListener('click', () => {
+                if (questionsToday >= 15) return;
+                const grade = document.getElementById('qGrade').value;
+                const subject = document.getElementById('qSubject').value;
+                const qs = questionsDB[subject]?.[grade] || [{ q: '2+2?', o: ['3','4','5','6'], c: 1 }];
+                currentQuiz.qs = [qs[Math.floor(Math.random() * qs.length)]];
+                questionsToday++;
+                render();
+                setTimeout(() => {
+                    const q = currentQuiz.qs[0];
+                    document.getElementById('qOpts').innerHTML = q.o.map((o,i) => `<div class="quiz-option" data-opt="${i}">${o}</div>`).join('');
+                    document.querySelectorAll('.quiz-option').forEach(el => el.addEventListener('click', e => {
+                        const sel = parseInt(el.dataset.opt);
+                        const correct = sel === q.c;
+                        document.querySelectorAll('.quiz-option').forEach((o,i) => { o.classList.add('disabled'); if (i === q.c) o.classList.add('correct'); else if (i === sel) o.classList.add('wrong'); });
+                        if (correct) { balance += 100; xp += 100; alert(`+100 🪙`); }
+                        updateAllBalances();
+                    }));
+                }, 50);
+            });
+            
+            document.querySelectorAll('.buy-re').forEach(b => b.addEventListener('click', () => { const i = JSON.parse(b.dataset.i); if (balance >= i.price) { balance -= i.price; empire.re.push(i); render(); } }));
+            document.querySelectorAll('.buy-car').forEach(b => b.addEventListener('click', () => { const i = JSON.parse(b.dataset.i); if (balance >= i.price) { balance -= i.price; empire.cars.push(i); render(); } }));
+            document.querySelectorAll('.buy-biz').forEach(b => b.addEventListener('click', () => { const i = JSON.parse(b.dataset.i); if (balance >= i.price) { balance -= i.price; empire.biz.push(i); render(); } }));
+            document.getElementById('collectBtn')?.addEventListener('click', () => {
+                const inc = empire.re.reduce((s,i)=>s+i.inc,0) + empire.cars.reduce((s,i)=>s+i.inc,0) + empire.biz.reduce((s,i)=>s+i.inc,0);
+                if (inc === 0) alert('Нет дохода!');
+                else if (Date.now() - lastCollect < 420000) alert('Раз в 7 минут!');
+                else { balance += inc; lastCollect = Date.now(); render(); alert(`+${inc} 🪙`); }
+            });
+            
+            document.querySelectorAll('.read-btn').forEach(b => b.addEventListener('click', function() { this.disabled = true; xp += 250; render(); }));
+        }
+
+        generateMarket();
+        setInterval(trySellToBots, 30000);
+        render();
+    </script>
+</body>
+</html>
